@@ -70,20 +70,29 @@ if __name__ == "__main__":
     deviceList = xdpcHandler.connectedDots()
     print(f"\nStarting sync for connected devices... Root node: {deviceList[-1].bluetoothAddress()}")
     print("This takes at least 14 seconds")
+    print(f"For {len(deviceList)} devices")
     if not manager.startSync(deviceList[-1].bluetoothAddress()):
         print(f"Could not start sync. Reason: {manager.lastResultText()}")
         if manager.lastResult() != movelladot_pc_sdk.XRV_SYNC_COULD_NOT_START:
             print("Sync could not be started. Aborting.")
             xdpcHandler.cleanup()
             exit(-1)
+    else:
+        print(f"Sync Succesful for {len(deviceList)} devices")
 
-        # If (some) devices are already in sync mode.Disable sync on all devices first.
-        manager.stopSync()
-        print(f"Retrying start sync after stopping sync")
-        if not manager.startSync(deviceList[-1].bluetoothAddress()):
-            print(f"Could not start sync. Reason: {manager.lastResultText()}. Aborting.")
-            xdpcHandler.cleanup()
-            exit(-1)
+    #for device in xdpcHandler.connectedDots():
+        # """
+        # Settings for CSV Output
+        # """
+        # # Set output to CSV with Quaternion and Euler Angles
+        # print("Setting Quaternion and Euler CSV output")
+        # device.setLogOptions(movelladot_pc_sdk.movelladot_pc_sdk_py310_64.XsLogOptions_QuaternionAndEuler)
+        # # Setting name for CSV Output
+        # logFileName = "logfile_" + device.bluetoothAddress().replace(':', '-') + ".csv"
+        # print(f"Enable logging to: {logFileName}")
+        # # Attempts to enable logging to the specified file for the device and prints the outcome if it fails.
+        # if not device.enableLogging(logFileName):
+        #     print(f"Failed to enable logging. Reason: {device.lastResultText()}")
 
     # Start live data output. Make sure root node is last to go to measurement.
     print("Putting devices into measurement mode.")
@@ -121,10 +130,6 @@ if __name__ == "__main__":
     for device in xdpcHandler.connectedDots():
         if not device.stopMeasurement():
             print("Failed to stop measurement.")
-
-    print("Stopping sync...")
-    if not manager.stopSync():
-        print("Failed to stop sync.")
 
     print("Closing ports...")
     manager.close()

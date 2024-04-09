@@ -35,12 +35,13 @@ pip install movelladot_pc_sdk-202x.x.x-cp39-none-win_amd64.whl
 import movelladot_pc_sdk.movelladot_pc_sdk_py310_64
 
 from xdpchandler import *
+xdpcHandler = XdpcHandler()
+
 
 def main():
     """
     Initialize
     """
-    xdpcHandler = XdpcHandler()
     # If XdpcHandler is not initialized -> Cleanup
     if not xdpcHandler.initialize():
         xdpcHandler.cleanup()
@@ -75,19 +76,44 @@ def main():
             - Dynamic: Setting for fast and jerky motions that last for a short time. 
                 Uses magnetometer for stabilization. (Used for example for sprinting)
         """
-        # Get available filter profiles for every device
-        filterProfiles = device.getAvailableFilterProfiles()
-        print("Available filter profiles:")
-        for f in filterProfiles:
-            print(f.label())
-        # Get current filter profile for device
-        print(f"Current profile: {device.onboardFilterProfile().label()}")
         # Set filter profile to General
         if device.setOnboardFilterProfile("General"):
             print("Successfully set profile to General")
         else:
             print("Setting filter profile failed!")
 
+        # Set output rate to 60 Hz
+        if device.setOutputRate(60):
+            print("Successfully set output rate to 60 Hz")
+        else:
+            print("Setting output rate failed!")
+
+
+    manager = xdpcHandler.manager()
+    deviceList = xdpcHandler.connectedDots()
+    synced = False
+    print(f"\nStarting sync for connected devices... Root node: {deviceList[-1].bluetoothAddress()}")
+    print("This takes at least 14 seconds")
+    while not synced:
+        if not manager.startSync(deviceList[-1].bluetoothAddress()):
+            print(f"Could not start sync. Reason: {manager.lastResultText()}")
+            if manager.lastResult() != movelladot_pc_sdk.XRV_SYNC_COULD_NOT_START:
+                print("Sync could not be started. Aborting.")
+                continue
+        elif manager.startSync(deviceList[-1].bluetoothAddress()):
+            print(f"Sync Succesful for {len(deviceList)} devices")
+
+
+        # # If (some) devices are already in sync mode.
+        # # Disable sync on all devices first.
+        # manager.stopSync()
+        # print(f"Retrying start sync after stopping sync")
+        # if not manager.startSync(deviceList[-1].bluetoothAddress()):
+        #     print(f"Could not start sync. Reason: {manager.lastResultText()}. Aborting.")
+        #     xdpcHandler.cleanup()
+        #     exit(-1)
+
+    for device in xdpcHandler.connectedDots():
         """
         Settings for CSV Output
         """
@@ -120,7 +146,7 @@ def main():
     # First printing some headers (bluetooth adress), so we see which data belongs to which device
     s = ""
     for device in xdpcHandler.connectedDots():
-        s += f"{device.bluetoothAddress():42}"
+        s += f"{device.bluetoothAddress():27}"
     print("%s" % s, flush=True)
 
     # Boolean for Orientation Reset
@@ -143,7 +169,8 @@ def main():
                 # Check if packet contains Orientation data, extracts Euler angles.
                 if packet.containsOrientation():
                     euler = packet.orientationEuler()
-                    s += f"EulerX:{euler.x():7.2f}, EulerY:{euler.y():7.2f}, EulerZ:{euler.z():7.2f}| "
+                    s += (
+                        f"TS: {packet.sampleTimeFine():8d}, EulerX:{euler.x():7.2f}, EulerY:{euler.y():7.2f}, EulerZ:{euler.z():7.2f}| ")
             # Print the Euler Angles
             print("%s\r" % s, end="", flush=True)
 
@@ -154,7 +181,8 @@ def main():
             if not orientationResetDone and movelladot_pc_sdk.XsTimeStamp_nowMs() - startTime > 5000:
                 for device in xdpcHandler.connectedDots():
                     # Reset heading orientation for each device
-                    print(f"\nResetting heading for device {device.portInfo().bluetoothAddress()}: ", end="", flush=True)
+                    print(f"\nResetting heading for device {device.portInfo().bluetoothAddress()}: ", end="",
+                          flush=True)
                     # Prints OK if succeeded
                     if device.resetOrientation(movelladot_pc_sdk.XRM_Heading):
                         print("OK", end="", flush=True)
@@ -187,7 +215,18 @@ def main():
         if not device.disableLogging():
             print("Failed to disable logging.")
 
+    # """
+    # Stop Sync
+    # """
+    # print("Stopping sync...")
+    # if not manager.stopSync():
+    #     print("Failed to stop sync.")
+    #
+    # print("Closing ports...")
+    # manager.close()
+
     xdpcHandler.cleanup()
+    print("Successful exit.")
 
 
 if __name__ == "__main__":
