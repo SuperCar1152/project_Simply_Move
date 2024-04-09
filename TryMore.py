@@ -37,6 +37,8 @@ import movelladot_pc_sdk.movelladot_pc_sdk_py310_64
 from xdpchandler import *
 xdpcHandler = XdpcHandler()
 
+version = 1
+
 def main():
     """
     Initialize
@@ -92,9 +94,9 @@ def main():
         """
         # Set output to CSV with Quaternion and Euler Angles
         print("Setting Quaternion and Euler CSV output")
-        device.setLogOptions(movelladot_pc_sdk.movelladot_pc_sdk_py310_64.XsLogOptions_OrientationMask)
+        device.setLogOptions(movelladot_pc_sdk.movelladot_pc_sdk_py310_64.XsLogOptions_QuaternionAndEuler)
         # Setting name for CSV Output
-        logFileName = "logfile_" + device.bluetoothAddress().replace(':', '-') + ".csv"
+        logFileName = f"dataCSV\logfile_{device.bluetoothAddress().replace(':', '-')}_V{version}.csv"
         print(f"Enable logging to: {logFileName}")
         # Attempts to enable logging to the specified file for the device and prints the outcome if it fails.
         if not device.enableLogging(logFileName):
@@ -105,7 +107,7 @@ def main():
         """
         # Set device to measurement mode
         print("Putting device into measurement mode.")
-        if not device.startMeasurement(movelladot_pc_sdk.XsPayloadMode_ExtendedEuler ):
+        if not device.startMeasurement(movelladot_pc_sdk.XsPayloadMode_ExtendedEuler):
             print(f"Could not put device into measurement mode. Reason: {device.lastResultText()}")
             continue
 
@@ -123,7 +125,7 @@ def main():
     print("%s" % s, flush=True)
 
     # Boolean for Orientation Reset
-    orientationResetDone = False
+    # orientationResetDone = False
     # startTime to set measurement time
     startTime = movelladot_pc_sdk.XsTimeStamp_nowMs()
 
@@ -132,6 +134,7 @@ def main():
     while movelladot_pc_sdk.XsTimeStamp_nowMs() - startTime <= 90000:
         # Check if packets are available for processing from connected devices
         if xdpcHandler.packetsAvailable():
+
             s = ""
             """"
             Receive Euler Angles as Packet
@@ -148,36 +151,7 @@ def main():
             # Print the Euler Angles
             print("%s\r" % s, end="", flush=True)
 
-            # """
-            # Orientation Reset
-            # """
-            # # Check if  Orientation Reset is not done yet and 5 seconds have elapsed since start time.
-            # if not orientationResetDone and movelladot_pc_sdk.XsTimeStamp_nowMs() - startTime > 5000:
-            #     for device in xdpcHandler.connectedDots():
-            #         # Reset heading orientation for each device
-            #         print(f"\nResetting heading for device {device.portInfo().bluetoothAddress()}: ", end="",
-            #               flush=True)
-            #         # Prints OK if succeeded
-            #         if device.resetOrientation(movelladot_pc_sdk.XRM_Heading):
-            #             print("OK", end="", flush=True)
-            #         # Prints NOK if failed with reason
-            #         else:
-            #             print(f"NOK: {device.lastResultText()}", end="", flush=True)
-            #     print("\n", end="", flush=True)
-            #     # Set OrientationReset to true, since Orientation Reset has been done
-            #     orientationResetDone = True
     print("\n-----------------------------------------", end="", flush=True)
-
-    # """
-    # Reset orientation to default alignment
-    # """
-    # for device in xdpcHandler.connectedDots():
-    #     print(f"\nResetting heading to default for device {device.portInfo().bluetoothAddress()}: ", end="", flush=True)
-    #     if device.resetOrientation(movelladot_pc_sdk.XRM_DefaultAlignment):
-    #         print("OK", end="", flush=True)
-    #     else:
-    #         print(f"NOK: {device.lastResultText()}", end="", flush=True)
-    # print("\n", end="", flush=True)
 
     """
     Stop measurement

@@ -3,6 +3,9 @@ from xdpchandler import *
 
 xdpcHandler = XdpcHandler()
 
+name = "V4"
+logMap = "dataCSV"
+
 def sync_xsense_dots():
     # Initialize SDK
     if not xdpcHandler.initialize():
@@ -22,9 +25,9 @@ def sync_xsense_dots():
         # Set output rate
         device.setOutputRate(60)
         # Set logging options
-        device.setLogOptions(movelladot_pc_sdk.movelladot_pc_sdk_py310_64.XsLogOptions_QuaternionAndEuler)
+        device.setLogOptions(movelladot_pc_sdk.movelladot_pc_sdk_py310_64.XsLogOptions_Euler)
         # Enable logging
-        logFileName = "logfile_" + device.bluetoothAddress().replace(':', '-') + ".csv"
+        logFileName = f"{logMap}\logfile_{device.bluetoothAddress().replace(':', '-')}_{name}.csv"
         device.enableLogging(logFileName)
         # Start measurement mode
         device.startMeasurement(movelladot_pc_sdk.XsPayloadMode_ExtendedEuler)
