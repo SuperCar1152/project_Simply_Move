@@ -122,7 +122,7 @@ class XdpcHandler(movelladot_pc_sdk.XsDotCallback):
         print("Press any key or wait 20 seconds to stop scanning...")
         connectedDOTCount = 0
         startTime = movelladot_pc_sdk.XsTimeStamp_nowMs()
-        while waitForConnections and not self.errorReceived() and movelladot_pc_sdk.XsTimeStamp_nowMs() - startTime <= 20000:
+        while waitForConnections and not self.errorReceived() and movelladot_pc_sdk.XsTimeStamp_nowMs() - startTime <= 200000:
             time.sleep(0.1)
 
             nextCount = len(self.detectedDots())
@@ -153,8 +153,14 @@ class XdpcHandler(movelladot_pc_sdk.XsDotCallback):
                     print(f"Connection to Device {address} failed, retrying...")
                     print(f"Device {address} retry connected:")
                     if not self.__manager.openPort(portInfo):
-                        print(f"Could not open DOT. Reason: {self.__manager.lastResultText()}")
-                        continue
+                        print(f"Connection to Device {address} failed, retrying...")
+                        print(f"Device {address} retry connected:")
+                        if not self.__manager.openPort(portInfo):
+                            print(f"Connection to Device {address} failed, retrying...")
+                            print(f"Device {address} retry connected:")
+                            if not self.__manager.openPort(portInfo):
+                                print(f"Could not open DOT. Reason: {self.__manager.lastResultText()}")
+
 
                 device = self.__manager.device(portInfo.deviceId())
                 if device is None:
@@ -173,7 +179,7 @@ class XdpcHandler(movelladot_pc_sdk.XsDotCallback):
                     continue
 
                 self.__connectedUsbDots.append(device)
-                print(f"Device: {device.productCode()}, with ID: {device.deviceId().toXsString()} opened.")
+                print(f"Device: {device.productCode()}, with ID: {device.deviceId().toXsString()} connected.")
 
     def detectUsbDevices(self):
         """
