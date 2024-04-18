@@ -1,5 +1,5 @@
 import movelladot_pc_sdk.movelladot_pc_sdk_py310_64
-from xdpchandler import *
+from xdpchandler_SDK import *
 
 xdpcHandler = XdpcHandler()
 

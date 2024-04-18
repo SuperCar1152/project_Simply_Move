@@ -31,7 +31,7 @@
 # For example, for Python 3.9 on Windows 64 bit run the following command
 # pip install movelladot_pc_sdk-202x.x.x-cp39-none-win_amd64.whl
 
-from xdpchandler import *
+from xdpchandler_SDK import *
 
 
 if __name__ == "__main__":

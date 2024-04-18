@@ -1,4 +1,4 @@
-from xdpchandler import *
+from xdpchandler_SDK import *
 
 
 if __name__ == "__main__":
